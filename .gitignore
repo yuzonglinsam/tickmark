@@ -1,0 +1,41 @@
+# Python
+.venv/
+.venv311/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.cache/
+
+# Raw SEC downloads (re-fetchable; large)
+.rawdata/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+.vercel/
+
+# misc
+.DS_Store
+*.sqlite*
+*.db
+dist/
+build/
+artifacts/
+shot.mjs
+
+# private notes (kept locally)
+docs/INTERVIEW_PREP.md
+docs/CV_AND_PITCH.md
+docs/HANDOVER_CODEX.md
+docs/archive/HANDOVER_CLAUDE.md
+HANDOVER_CLAUDE.md

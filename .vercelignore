@@ -1,0 +1,13 @@
+.git/
+.venv/
+.venv311/
+.next/
+node_modules/
+.rawdata/
+.cache/
+artifacts/
+docs/
+.env
+.env.*
+**/__pycache__/
+*.tsbuildinfo

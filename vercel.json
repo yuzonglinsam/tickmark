@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 60,
+      "includeFiles": "{engine/credit_workbench/**,public/data/universe.json,public/data/issuers/**}",
+      "excludeFiles": "{node_modules/**,.next/**,.venv/**,.rawdata/**,artifacts/**,docs/**,engine/tests/**,engine/pipeline/**,public/showcase/**,public/data/ai/**}"
+    }
+  }
+}

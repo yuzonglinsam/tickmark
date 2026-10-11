@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tickmark-engine"
+version = "1.0.0"
+description = "Tickmark credit engine: SEC XBRL normalisation, deterministic credit metrics, cited AI memos."
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = [
+  "requests>=2.32",
+  "beautifulsoup4>=4.12",
+  "reportlab>=4.0",
+  "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+reconcile = ["edgartools>=5.0", "pandas>=2.2"]  # filing-level XBRL reconciliation (xbrl_fallback.py)
+cache = ["psycopg[binary]>=3.2"]                 # PostgreSQL memo cache (memo_cache.py)
+
+[project.scripts]
+credit-workbench = "credit_workbench.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["credit_workbench*"]

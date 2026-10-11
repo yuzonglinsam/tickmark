@@ -1,0 +1,6 @@
+# Python dependencies for the Vercel serverless API (api/index.py).
+# The data pipeline has its own list in engine/requirements.txt.
+flask==3.1.2
+requests==2.34.2
+beautifulsoup4==4.15.0
+python-dotenv==1.2.1

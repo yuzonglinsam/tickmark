@@ -1,0 +1,228 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Tickmark design tokens — a dark research terminal.
+ * Chrome uses the amber brand accent; data marks use the validated
+ * categorical/sequential steps (see lib/palette.ts). Status colours are
+ * reserved for state and always ship with an icon or label.
+ */
+:root {
+  color-scheme: dark;
+  --radius: 0.625rem;
+
+  --background: #06080b;
+  --foreground: #e6edf3;
+  --card: #0b0f14;
+  --card-foreground: #e6edf3;
+  --popover: #0e131a;
+  --popover-foreground: #e6edf3;
+  --primary: #f2a33a;
+  --primary-foreground: #1b1305;
+  --secondary: #141a22;
+  --secondary-foreground: #d6dde6;
+  --muted: #11161d;
+  --muted-foreground: #8592a0;
+  --accent: #171e28;
+  --accent-foreground: #e6edf3;
+  --destructive: #e5484d;
+  --border: #1b232e;
+  --input: #212b37;
+  --ring: #f2a33a;
+
+  /* terminal surfaces */
+  --panel: #0b0f14;
+  --panel-2: #0f141b;
+  --panel-3: #141a22;
+  --hairline: #1b232e;
+  --hairline-strong: #283340;
+  --grid: #18202a;
+  --ink-1: #e6edf3;
+  --ink-2: #aab6c2;
+  --ink-3: #6f7c89;
+
+  /* brand */
+  --amber: #f2a33a;
+  --amber-soft: rgba(242, 163, 58, 0.12);
+  --cyan: #5cc8ff;
+
+  /* data series (dark-mode steps of the validated categorical order) */
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-muted: #3a4553;
+
+  /* status (reserved) */
+  --good: #2fbf71;
+  --warning: #f5b83d;
+  --serious: #ec835a;
+  --critical: #e5484d;
+
+  /* risk tiers: diverging blue (stronger) <-> red (weaker), split at the
+     Intermediate/Significant boundary; always paired with a text label */
+  --tier-0: #3d8ee8;
+  --tier-1: #6aa3e0;
+  --tier-2: #9db8d3;
+  --tier-3: #d8a77f;
+  --tier-4: #e57e4d;
+  --tier-5: #e5484d;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-panel-3: var(--panel-3);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-ink-1: var(--ink-1);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-amber: var(--amber);
+  --color-cyan: var(--cyan);
+  --color-good: var(--good);
+  --color-warning: var(--warning);
+  --color-serious: var(--serious);
+  --color-critical: var(--critical);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
+  --color-series-3: var(--series-3);
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    background: var(--background);
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01", "ss03";
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: rgba(242, 163, 58, 0.28);
+  }
+}
+
+/* numbers that must align */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.label-caps {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+.glow-amber {
+  background: radial-gradient(60% 60% at 50% 0%, rgba(242, 163, 58, 0.16), transparent 70%);
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #26303c transparent;
+}
+
+@keyframes tick-draw {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.tick-draw path {
+  stroke-dasharray: 24;
+  animation: tick-draw 0.6s ease-out forwards;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.caret::after {
+  content: "▍";
+  margin-left: 1px;
+  color: var(--amber);
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee {
+  animation: marquee 80s linear infinite;
+}
+.marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee,
+  .caret::after,
+  .tick-draw path {
+    animation: none !important;
+  }
+}
+
+[cmdk-group-heading] {
+  padding: 10px 12px 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
