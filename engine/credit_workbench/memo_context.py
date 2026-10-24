@@ -1,6 +1,8 @@
 """Analyst context passed to the memo model. Numbers inform reasoning; memo text stays digit-free."""
 from __future__ import annotations
 
+from .consistency import deterministic_facts
+
 
 def analyst_context(d: dict) -> dict:
     """Qualitative + quantitative context from an issuer document (for the model's reasoning only)."""
@@ -13,6 +15,7 @@ def analyst_context(d: dict) -> dict:
     ext = d.get("extended", {}).get(pid, {})
     val = lambda k: (ext.get(k) or {}).get("value")  # noqa: E731
     return {
+        "deterministic_comparisons": deterministic_facts(d),
         "definitions": ("When discussing net leverage use net_debt_to_ebitda_net_of_cash_and_st_investments; "
                         "sector_medians.nlev uses the same definition. The bundle metric 'net_leverage' nets "
                         "cash only and should not be compared with the sector median."),

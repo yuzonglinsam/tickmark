@@ -10,7 +10,8 @@ import { LogoMark } from "@/components/brand/logo";
 import { useIssuerCtx } from "./source-context";
 
 type NumberCheck = { text: string; verified: boolean; matched?: string };
-type Msg = { role: "user" | "assistant"; text: string; evidence?: Evidence[]; numbers?: NumberCheck[]; error?: boolean };
+type Calculation = { verified: boolean; matched?: string; reason?: string };
+type Msg = { calculations?: Calculation[]; consistency?: { conflicts: number; unreviewed: number }; role: "user" | "assistant"; text: string; evidence?: Evidence[]; numbers?: NumberCheck[]; error?: boolean };
 
 const SUGGESTED = [
   "What is the single biggest credit risk here?",
@@ -46,7 +47,7 @@ export function AskPanel() {
       });
       const body = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(body.error || `The analyst service returned HTTP ${r.status}.`);
-      setMsgs((m) => [...m, { role: "assistant", text: body.answer, evidence: body.evidence, numbers: body.numbers }]);
+      setMsgs((m) => [...m, { role: "assistant", text: body.answer, evidence: body.evidence, numbers: body.numbers, calculations: body.calculations, consistency: body.consistency }]);
     } catch (e) {
       setMsgs((m) => [...m, { role: "assistant", text: (e as Error).message, error: true }]);
     } finally {
@@ -70,7 +71,7 @@ export function AskPanel() {
             <LogoMark className="size-6" /> Ask Tickmark <span className="num text-[12px] font-normal text-ink-3">· {doc.issuer.ticker}</span>
           </SheetTitle>
           <SheetDescription className="text-[12px] text-ink-3">
-            Answers use only this issuer&apos;s SEC-derived figures and filing excerpts. Every number in an answer is checked against the dataset.
+            Answers use only this issuer&apos;s SEC-derived figures and filing excerpts. Labelled calculations are computed from explicit metrics and periods. AI prose requires analyst review.
           </SheetDescription>
         </SheetHeader>
         <div className="scrollbar-thin flex-1 space-y-4 overflow-y-auto px-5 py-5">
@@ -94,6 +95,8 @@ export function AskPanel() {
                   {m.numbers?.length ? highlight(m.text, m.numbers) : m.text}
                 </p>
                 {!!m.numbers?.length && <Verification numbers={m.numbers} />}
+                {!!m.calculations?.length && <p className="mt-2 text-[11.5px] text-ink-3">{m.calculations.filter((c) => c.verified).length}/{m.calculations.length} calculations computed from bound SEC inputs. This does not verify the AI prose.</p>}
+                {m.consistency && <p className="mt-2 text-[11.5px] text-ink-3">Prose consistency: {m.consistency.conflicts} conflicts · {m.consistency.unreviewed} unreviewed.</p>}
                 {!!m.evidence?.length && (
                   <div className="mt-2.5 flex flex-wrap gap-1.5">
                     {m.evidence.map((e, k) => {
@@ -129,7 +132,7 @@ export function AskPanel() {
               <ArrowUp className="size-4" />
             </button>
           </div>
-          <p className="mt-2 px-1 text-[10.5px] text-ink-3">AI can be wrong. Verified figures are underlined; anything unverified is flagged.</p>
+          <p className="mt-2 px-1 text-[10.5px] text-ink-3">AI can be wrong. Check the labelled formulas; unbound numbers in prose are flagged.</p>
         </form>
       </SheetContent>
     </Sheet>
@@ -143,7 +146,7 @@ function Verification({ numbers }: { numbers: NumberCheck[] }) {
     <div className={cn("mt-3 inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px]",
       all ? "border-good/30 bg-good/10 text-good" : "border-warning/30 bg-warning/10 text-warning")}>
       {all ? <BadgeCheck className="size-3.5" /> : <ShieldAlert className="size-3.5" />}
-      {ok}/{numbers.length} figures verified against SEC-derived data{!all && " · red = not in dataset"}
+      {ok}/{numbers.length} prose figures bound to SEC inputs{!all && " · flagged = unverified"}
     </div>
   );
 }
@@ -158,7 +161,7 @@ function highlight(text: string, numbers: NumberCheck[]) {
     if (i < 0) continue;
     parts.push(rest.slice(0, i));
     parts.push(
-      <span key={key++} title={n.verified ? `Matches ${n.matched}` : "Not found in the dataset — possibly computed by the model. Verify before use."}
+      <span key={key++} title={n.verified ? `Matches ${n.matched}` : "Not bound to a metric and fiscal period. Verify before use."}
         className={cn("num rounded px-0.5", n.verified ? "bg-amber/10 text-ink-1 underline decoration-amber/60 underline-offset-2" : "bg-critical/10 text-critical underline decoration-wavy decoration-critical/70")}>
         {n.text}
       </span>,

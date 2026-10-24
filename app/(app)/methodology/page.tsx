@@ -77,7 +77,7 @@ export default function Methodology() {
       <Section n="03" title="Indicative financial-risk profile">
         <p>
           S&amp;P Global Ratings publishes the ratio ranges it uses to assess a corporate&apos;s <em>financial</em> risk profile
-          (Corporate Methodology, standard-volatility table). Tickmark maps two core ratios onto those ranges on a net-debt
+          (Corporate Methodology, standard-volatility table). Tickmark uses a simplified mapping of net leverage and CFO (a proxy, not FFO) onto those ranges on a net-debt
           basis and takes the weaker band. Business risk, industry risk, liquidity assessments and analytical adjustments are
           out of scope, so the output is <b>not a credit rating</b> and should not be read as one.
         </p>

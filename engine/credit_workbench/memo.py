@@ -9,11 +9,12 @@ from urllib.parse import urlparse
 
 import requests
 
+from .consistency import check_sections
 from .disclosures import Passage
 from .metrics import calculate
 from .models import Snapshot
 
-PROMPT_VERSION = "memo-v2.0"
+PROMPT_VERSION = "memo-v2.1"
 SECTIONS = ("credit_strengths", "key_risks", "debt_servicing_capacity", "overall_credit_view")
 
 
@@ -139,6 +140,8 @@ def generate(snapshot: Snapshot, passages: tuple[Passage, ...], *, api_key: str,
         "comparison, indicative financial risk profile, threshold headroom, maturity profile, "
         "shareholder returns) to make comparative, judgement-based statements such as 'leverage sits "
         "above the sector median' or 'shareholder distributions absorb most free cash flow'.\n"
+        "Use analyst_context.deterministic_comparisons as the authority for coverage and directions. "
+        "Unknown comparisons must remain unknown; do not reverse higher/lower or claim funding coverage. "
         "Hard rules: no Arabic digits, dates, percentages or quantities in text (the deterministic "
         "tables carry all figures). Do not invent facts, ratings, outlooks or default probabilities; "
         "the risk profile is indicative, not a rating. Present forward-looking views as analyst "
@@ -167,6 +170,12 @@ def generate(snapshot: Snapshot, passages: tuple[Passage, ...], *, api_key: str,
             payload = json.loads(text)
             try:
                 validate_memo(payload, set(originals), allowed_metrics, model=model)
+                if context and context.get("deterministic_comparisons"):
+                    review = check_sections(payload, context["deterministic_comparisons"])
+                    if review["conflicts"]:
+                        raise MemoError("Contradictory financial comparison: " + str([
+                            {k: c.get(k) for k in ("text", "fact_id", "actual")}
+                            for c in review["checks"] if c["status"] == "conflict"]))
                 break
             except MemoError as exc:
                 if attempt:

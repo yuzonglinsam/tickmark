@@ -94,7 +94,13 @@ export type MemoSections = {
   debt_servicing_capacity: Claim[];
   overall_credit_view: Claim[];
 };
+export type ConsistencyCheck = {
+  section: string; index: number; text: string; status: "consistent" | "conflict" | "unreviewed";
+  fact_id?: string | null; formula?: string; left?: number | null; right?: number | null; actual?: string; sources?: string[];
+};
+export type ConsistencyReview = { status: string; checked: number; conflicts: number; unreviewed: number; checks: ConsistencyCheck[] };
 export type Memo = {
+  consistency?: Partial<Record<"en" | "zh", ConsistencyReview>>;
   en: MemoSections;
   zh: MemoSections | null;
   model: string;

@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { Panel } from "@/components/common/panel";
 import { resolveEvidence } from "@/lib/issuer";
 import { fmtDate, METRIC_LABELS, SECTION_LABELS } from "@/lib/format";
-import type { Claim, Memo, Passage } from "@/lib/types";
+import { useJson } from "@/lib/data";
+import type { ConsistencyReview, ConsistencyCheck, Claim, Memo, Passage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useIssuerCtx } from "./source-context";
 
@@ -18,6 +19,8 @@ export function MemoTab() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const memo = doc.memo;
+  const review = useJson<{ issuer_generated_at: string; consistency: Partial<Record<"en" | "zh", ConsistencyReview>> }>(`/api/py/review?ticker=${encodeURIComponent(doc.issuer.ticker)}`);
+  const audit = memo?.consistency?.[lang] ?? (review.data?.issuer_generated_at === doc.generated_at ? review.data?.consistency[lang] : undefined);
 
   const generate = async () => {
     setBusy(true);
@@ -71,10 +74,11 @@ export function MemoTab() {
           <h2 className="mt-2 text-[18px] font-semibold text-ink-1">{lang === "zh" ? "信用研究備忘錄" : "Credit research memo"} · {doc.issuer.ticker} · {doc.primary}</h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Check ok label={`${cited}/${claims.length} claims cited`} />
+          <Check ok={claims.length > 0 && cited === claims.length} label={`${cited}/${claims.length} claims cited`} />
           <Check ok={resolved === total} label={`${resolved}/${total} citations resolve to filings`} />
           <Check ok={digitFree} label="No numbers in AI text" />
-          <button onClick={() => copyMarkdown(doc.issuer.name, doc.issuer.ticker, doc.primary, sections, lang, memo)}
+          <Check ok={!!audit && audit.conflicts === 0 && audit.checked > 0 && audit.unreviewed === 0} label={audit ? `Consistency: ${audit.conflicts} conflicts · ${audit.checked} checked · ${audit.unreviewed} unreviewed` : "Consistency: not checked"} />
+          <button onClick={() => copyMarkdown(doc.issuer.name, doc.issuer.ticker, doc.primary, sections, lang, memo, audit)}
             className="inline-flex items-center gap-1.5 rounded-md border border-hairline-strong px-2 py-1 text-[11.5px] text-ink-2 hover:text-ink-1">
             <Copy className="size-3.5" /> Copy
           </button>
@@ -88,7 +92,7 @@ export function MemoTab() {
         {ORDER.map((k) => (
           <Panel key={k} eyebrow={lang === "zh" ? SECTION_LABELS[k].en : undefined} title={lang === "zh" ? SECTION_LABELS[k].zh : SECTION_LABELS[k].en}>
             <div className="space-y-4">
-              {(sections[k] ?? []).map((c, i) => <ClaimView key={i} c={c} lang={lang} />)}
+              {(sections[k] ?? []).map((c, i) => <ClaimView key={i} c={c} lang={lang} checks={audit?.checks.filter((x) => x.section === k && x.index === i)} />)}
             </div>
           </Panel>
         ))}
@@ -97,7 +101,7 @@ export function MemoTab() {
       <p className="flex items-start gap-2 text-[11.5px] leading-relaxed text-ink-3">
         <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
         A valid citation proves the evidence exists, not that it fully supports the sentence. Treat the memo as a first draft for
-        analyst review. Figures intentionally live only in the deterministic tables.
+        analyst review. Consistency checks cover only supported comparison phrases; unreviewed prose is not verified. Figures remain in deterministic tables and checks.
       </p>
     </div>
   );
@@ -120,11 +124,17 @@ function LangBtn({ on, children, onClick, disabled }: { on: boolean; children: R
   );
 }
 
-function ClaimView({ c, lang }: { c: Claim; lang: "en" | "zh" }) {
+function ClaimView({ c, lang, checks }: { c: Claim; lang: "en" | "zh"; checks?: ConsistencyCheck[] }) {
   const { doc, trace } = useIssuerCtx();
+  const conflicts = checks?.filter((x) => x.status === "conflict") ?? [];
   return (
     <div className="group">
-      <p className={cn("text-[13.5px] leading-relaxed text-ink-2", lang === "zh" && "text-[14px] leading-[1.9]")}>{c.text}</p>
+      <p className={cn("text-[13.5px] leading-relaxed text-ink-2", lang === "zh" && "text-[14px] leading-[1.9]")}>{conflicts.length ? (lang === "zh" ? "此段含有與數據矛盾的結論，暫不作為分析結論展示。請檢視以下計算及原文。" : "This claim contains a comparison that conflicts with the data and is withheld from the analysis. Review the checks and original below.") : c.text}</p>
+      {conflicts.length > 0 && <details className="mt-2 text-[12px] text-ink-2"><summary>Conflicting draft · {conflicts.length} checks</summary><p>{c.text}</p>
+        {conflicts.map((x, i) => <p key={i}>{x.formula}: {x.left?.toLocaleString("en-US", { maximumFractionDigits: 6 }) ?? "N/A"} {x.actual} {x.right?.toLocaleString("en-US", { maximumFractionDigits: 6 }) ?? "N/A"}.
+          {x.sources?.map((id) => <button key={id} onClick={() => trace({ kind: "source", id })} className="text-amber"> [{id}]</button>)}
+        </p>)}
+      </details>}
       <div className="mt-2 flex flex-wrap gap-1.5">
         {c.evidence.map((e, i) => {
           const r = resolveEvidence(doc, e);
@@ -175,13 +185,17 @@ function Passages() {
   );
 }
 
-function copyMarkdown(name: string, ticker: string, period: string, sections: Record<string, Claim[]>, lang: "en" | "zh", memo: Memo) {
+function copyMarkdown(name: string, ticker: string, period: string, sections: Record<string, Claim[]>, lang: "en" | "zh", memo: Memo, audit?: ConsistencyReview) {
   const lines = [`# ${name} (${ticker}) — ${lang === "zh" ? "信用研究備忘錄" : "Credit memo"} · ${period}`, "",
     `_Draft generated by ${memo.model} (${memo.prompt_version}) on ${memo.generated_at.slice(0, 10)}. Figures: see Tickmark tables._`, ""];
   for (const k of ORDER) {
     lines.push(`## ${lang === "zh" ? SECTION_LABELS[k].zh : SECTION_LABELS[k].en}`, "");
-    for (const c of sections[k] ?? []) lines.push(`- ${c.text}`);
+    for (const [index, c] of (sections[k] ?? []).entries()) {
+      const conflicts = audit?.checks.filter((x) => x.section === k && x.index === index && x.status === "conflict") ?? [];
+      lines.push(conflicts.length ? `- [WITHHELD: conflicting comparison] ${conflicts.map((x) => `${x.formula}: ${x.left} ${x.actual} ${x.right}`).join("; ")}` : `- ${c.text}`);
+    }
     lines.push("");
   }
+  lines.push(`Consistency: ${audit ? `${audit.conflicts} conflicts; ${audit.unreviewed} unreviewed` : "not checked"}. Citation resolution does not verify meaning.`);
   navigator.clipboard.writeText(lines.join("\n")).then(() => toast.success("Memo copied as Markdown"));
 }
