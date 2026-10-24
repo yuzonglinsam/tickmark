@@ -13,4 +13,4 @@ Necessary copy distinguishes dataset build/cut-off dates from financial coverage
 - Four actual DeepSeek Q&A requests; final compound and browser responses computed KO distributions of USD 9.525bn, FCF shortfall of USD 4.229bn and distributions/FCF of 179.853%.
 - KO memo and Ask checked at 1440×900 and 390×844; mobile had no horizontal document overflow. Before/after memo screenshots and the real Ask result are linked in the report.
 
-See [feedback-fix-report.md](feedback-fix-report.md) for root causes, evidence, limitations and CV/interview wording. Phrase matching is not semantic proof; stored drafts are not bulk-regenerated. Existing Next.js security warning remains a separate issue. No merge or production acceptance is requested by this draft.
+See [feedback-fix-report.md](https://github.com/yuzonglinsam/tickmark/blob/fix/feedback-and-redesign/docs/feedback-fix-report.md) for root causes, evidence, limitations and CV/interview wording. Phrase matching is not semantic proof; stored drafts are not bulk-regenerated. Existing Next.js security warning remains a separate issue. No merge or production acceptance is requested by this draft.

@@ -41,7 +41,7 @@ Methodology wording explicitly describes the financial-risk band as a simplified
 - `npm run build`: passed, 507 pages. The first invocation stopped after compilation with a Next.js security upgrade reminder; the prescribed retry completed successfully, still reporting the existing vulnerability. No dependency upgrade was bundled.
 - Browser: KO memo EN/繁中, conflict expansion with source buttons, and Ask response checked. Desktop 1440×900 and mobile 390×844 screenshots retained. Mobile document width and scroll width were both 390px for memo and Ask.
 - Local API tests cover cached review, separate citations/consistency, contradictory answers, bound calculations, malformed provider output and generation rejection before caching.
-- GitHub CI result will be recorded below after pushing the branch and opening the draft PR. Local success alone is not GitHub CI evidence.
+- GitHub CI passed for code revision `06b6d37`: [run 40085311216](https://github.com/yuzonglinsam/tickmark/actions/runs/40085311216), with both Python engine tests and Next.js build successful. [Draft PR #1](https://github.com/yuzonglinsam/tickmark/pull/1) is open and not merged. A subsequent documentation-only commit records this result; final-head checks are also verified before delivery.
 
 Reproduce:
 
@@ -68,7 +68,7 @@ The local ignored evidence files are `artifacts/feedback/live-ask.json` and `art
 - Peer comparisons use the existing sector aggregate; constituent-level SEC citation lineage for that median is not supplied by the current dataset. Issuer input citations do not prove benchmark lineage.
 - Money arithmetic uses the document's reporting currency and its existing normalization. No FX conversion, debt-scope reconciliation or proxy-quality overhaul is included.
 - The review endpoint reads loaded/static documents and does not trigger paid generation or SEC fetching. Review freshness is checked against the issuer dataset build timestamp. A missing/unavailable review is labelled not checked.
-- The pre-existing partial dataset synchronization remains uncommitted in this checkout. The branch contains only correctness code, tests and documentation; the weekly workflow and precomputation files are untouched. The original local repository is not pushed to or modified.
+- The pre-existing partial dataset synchronization remains uncommitted in this checkout. The branch contains only correctness code, tests and documentation; the weekly workflow and precomputation files are untouched. The original local repository is not pushed to or modified. This checkout now tracks the GitHub branch through a separate `github` remote; its inherited local `origin` is preserved.
 - Existing Next.js dependency security warning remains open. Upgrade requires a separate scoped change because this task freezes dependency/UI work.
 
 ## CV and interview language

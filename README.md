@@ -26,7 +26,7 @@ Tickmark is built on one rule borrowed from audit — a number is only shown if 
 | Rule | How it is enforced |
 |---|---|
 | **Numbers come from code** | A Python engine reads SEC XBRL for exact fiscal contexts, rebuilds debt from tagged components and computes every ratio deterministically. |
-| **AI only explains** | DeepSeek writes the memo from computed metrics + real filing excerpts. Its prose may not contain a single digit (validation rejects it), so figures only live in audited tables. Q&A calculations bind explicit metric and period references; the server computes the result and shows the formula. Unbound numeric prose is withheld. Citation resolution and bounded comparison checks are reported separately. |
+| **AI only explains** | DeepSeek writes the memo from computed metrics + real filing excerpts. Its prose may not contain a single digit (validation rejects it), so figures only live in deterministic tables. Q&A calculations bind explicit metric and period references; the server computes the result and shows the formula. Unbound numeric prose is withheld. Citation resolution and bounded comparison checks are reported separately. |
 | **Missing means N/A, never zero** | Untagged items are shown as N/A with the reason. Partial debt scopes are labelled. Banks, insurers and REITs are excluded rather than forced through the wrong model. |
 
 ## What it does
