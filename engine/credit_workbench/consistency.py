@@ -81,7 +81,8 @@ def deterministic_facts(doc):
         h = (rp.get("headroom") or {}).get(side) or {}
         compare(key + ".threshold", (rp.get(side) or {}).get("value"), h.get("next_threshold"),
                 f"{key} vs next risk-band boundary (net-debt basis)", "lower" if side == "leverage" else "higher",
-                row(doc, "net_leverage_adj" if side == "leverage" else "cfo_to_debt")["sources"])
+                (row(doc, "net_leverage_adj")["sources"] if side == "leverage" else
+                 row(doc, "cfo_to_debt")["sources"] + row(doc, "net_debt_adj")["sources"]))
     return out
 
 
