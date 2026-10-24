@@ -165,7 +165,7 @@ function Header({ doc, onAsk }: { doc: Issuer; onAsk: () => void }) {
             <MessageSquareText className="size-5 text-amber" />
             <span>
               <span className="block text-[13.5px] font-medium text-ink-1">Ask Tickmark</span>
-              <span className="block text-[11.5px] text-ink-3">Cited answers · numbers verified</span>
+              <span className="block text-[11.5px] text-ink-3">Cited answers · explicit calculations</span>
             </span>
           </button>
         </div>

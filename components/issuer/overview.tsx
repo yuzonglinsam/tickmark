@@ -42,7 +42,7 @@ export function Overview({ onTab }: { onTab: (t: string) => void }) {
       </div>
       <SectorPeers />
       <p className="text-center text-[11.5px] text-ink-3">
-        Figures for {doc.issuer.name} are computed from SEC XBRL filings as of {doc.as_of}. Click any <span className="text-amber">✓</span> to trace it.
+        Dataset built {doc.generated_at.slice(0, 10)} · evidence cut-off {doc.as_of}. Financial coverage: {doc.periods.find((p) => p.id === period)?.start} to {doc.periods.find((p) => p.id === period)?.end} ({period}). Standalone quarters: {doc.periods.filter((p) => p.basis === "quarter").map((p) => p.id).join(", ") || "none available"}. Missing quarters are unavailable, not zero; a recent refresh does not imply recent financial coverage. Click any <span className="text-amber">✓</span> to trace it.
       </p>
     </div>
   );
@@ -240,7 +240,7 @@ function MemoTeaser({ onTab }: { onTab: (t: string) => void }) {
           </p>
           <div className="flex items-center gap-2 text-[11px] text-ink-3">
             <ShieldCheck className="size-3.5 text-good" />
-            {claim.evidence.length} citations · numbers excluded from AI text by design
+            {claim.evidence.length} citations · unreviewed AI draft; open memo for consistency checks
           </div>
         </div>
       ) : (
