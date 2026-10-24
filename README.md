@@ -26,7 +26,7 @@ Tickmark is built on one rule borrowed from audit — a number is only shown if 
 | Rule | How it is enforced |
 |---|---|
 | **Numbers come from code** | A Python engine reads SEC XBRL for exact fiscal contexts, rebuilds debt from tagged components and computes every ratio deterministically. |
-| **AI only explains** | DeepSeek writes the memo from computed metrics + real filing excerpts. Its prose may not contain a single digit (validation rejects it), so figures only live in audited tables. In Q&A, every number in an answer is parsed and matched against the dataset. |
+| **AI only explains** | DeepSeek writes the memo from computed metrics + real filing excerpts. Its prose may not contain a single digit (validation rejects it), so figures only live in audited tables. Q&A calculations bind explicit metric and period references; the server computes the result and shows the formula. Unbound numeric prose is withheld. Citation resolution and bounded comparison checks are reported separately. |
 | **Missing means N/A, never zero** | Untagged items are shown as N/A with the reason. Partial debt scopes are labelled. Banks, insurers and REITs are excluded rather than forced through the wrong model. |
 
 ## What it does
@@ -39,7 +39,7 @@ Tickmark is built on one rule borrowed from audit — a number is only shown if 
 - **Debt & liquidity** — contractual maturity wall vs. cash, liquidity runway, debt build-up by component.
 - **Cash-flow lens** — are dividends and buybacks funded by free cash flow?
 - **Bilingual AI memo** — four-section credit memo in English and Traditional Chinese, every claim citing filing passages or SEC facts.
-- **Ask Tickmark** — grounded Q&A (English / 中文) with per-figure verification badges.
+- **Ask Tickmark** — grounded Q&A (English / 中文) with source-bound arithmetic and visible formulas.
 - **Terminal & screener** — universe treemap, risk-band distribution, sector leverage, scatter of leverage vs. interest cover, percentile-shaded table, CSV export, closest sector peers on every issuer page.
 - **Built like a terminal** — `⌘K` search across 10,000+ SEC filers, `1`–`7` to switch tabs, `A` to ask; copy a memo as Markdown or download the raw JSON behind any page.
 
@@ -74,7 +74,7 @@ flowchart LR
   H --> I[DeepSeek V4 Flash]
 ```
 
-- **engine/** — the financial core (Python 3.11): SEC transport with fair-access throttling, period normalisation with restatement lineage, reported-borrowings debt build-up, ratio library, risk bands/headroom, Altman Z″, memo generation with JSON/citation/digit guards. 66 unit tests on synthetic fixtures.
+- **engine/** — the financial core (Python 3.11): SEC transport with fair-access throttling, period normalisation with restatement lineage, reported-borrowings debt build-up, ratio library, risk bands/headroom, Altman Z″, memo generation with JSON/citation/digit guards. 90 offline tests, including a frozen SEC-derived KO regression snapshot and synthetic counterexamples.
 - **api/index.py** — Flask app deployed as a Vercel Python function: live analysis, memo generation, grounded Q&A with number verification, per-IP rate limits.
 - **app/, components/** — Next.js 16 (App Router) + TypeScript + Tailwind, Radix/shadcn primitives, cmdk command palette, Apache ECharts, Framer Motion.
 - **.github/workflows** — CI (tests + build) and a weekly SEC data refresh that commits the new dataset.
