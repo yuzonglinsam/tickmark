@@ -9,7 +9,7 @@ from datetime import date
 import math
 import re
 
-VERSION = "consistency-v1.2"
+VERSION = "consistency-v1.3"
 # key -> peer key, preferred direction. Adjusted net leverage matches peer nlev.
 DIRECTIONS = {
     "gross_leverage": ("lev", "lower"), "net_leverage_adj": ("nlev", "lower"),
@@ -93,7 +93,7 @@ METRICS = {
     "interest_coverage": r"interest coverage|利息覆蓋率|利息覆盖率",
     "ebitda_coverage": r"ebitda coverage",
     "cfo_to_debt": r"(?:cash flow|cfo|ocf).to.debt|現金流對債務比率|现金流对债务比率",
-    "fcf_to_debt": r"(?:free cash flow|fcf).to.debt",
+    "fcf_to_debt": r"(?:free cash flow|fcf).to.debt|自由現金流對債務比率|自由现金流对债务比率",
     "operating_margin": r"operating margin|營業利潤率|营业利润率",
 }
 ABOVE = r"above|higher than|exceeds?|greater than|高[於于]|超過|超过"
@@ -183,7 +183,14 @@ def check_sections(sections, facts):
                 matches.sort()
                 for j, (start, end, key) in enumerate(matches):
                     segment = clause[start:matches[j + 1][0] if j + 1 < len(matches) else len(clause)]
-                    direction = "above" if re.search(ABOVE, segment, re.I) else "below" if re.search(BELOW, segment, re.I) else None
+                    above = bool(re.search(ABOVE, segment, re.I))
+                    below = bool(re.search(BELOW, segment, re.I))
+                    # A clause can compare several targets (above one, below median)
+                    # or explain an inverse relationship (liabilities exceed assets).
+                    # Do not bind the first direction to every target in that clause.
+                    if above and below:
+                        continue
+                    direction = "above" if above else "below" if below else None
                     suffix = ".peer" if re.search(r"median|中位數|中位数", segment, re.I) else ".threshold" if re.search(r"threshold|boundary|門檻|门槛", segment, re.I) else ".one" if re.search(r"\bone\b|unity|一", segment, re.I) else None
                     if direction and suffix:
                         add(key + suffix, None if re.search(NEGATIVE, segment, re.I) else direction)
