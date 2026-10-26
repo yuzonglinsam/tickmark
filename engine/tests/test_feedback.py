@@ -102,7 +102,9 @@ class ApiTests(unittest.TestCase):
         spec = importlib.util.spec_from_file_location('feedback_api', ROOT / 'api/index.py')
         cls.api = importlib.util.module_from_spec(spec); spec.loader.exec_module(cls.api)
     def test_cached_review_is_separate_from_citations(self):
-        r=self.api.app.test_client().get('/api/py/review?ticker=KO')
+        from unittest.mock import patch
+        with patch.object(self.api,'covered_doc',return_value=issuer()):
+            r=self.api.app.test_client().get('/api/py/review?ticker=KO')
         self.assertEqual(r.status_code,200)
         body=r.get_json(); self.assertIn('citations',body); self.assertGreater(body['consistency']['en']['conflicts'],0)
     def test_bound_ask_and_conflicting_prose(self):
@@ -165,6 +167,22 @@ class BindingRegressionTests(unittest.TestCase):
         r=check_sections({'test':[{'text':'Free cash flow to debt is below the sector median.'}]},deterministic_facts(d))
         self.assertEqual(r['checks'][0]['fact_id'],'fcf_to_debt.peer')
         self.assertEqual(r['conflicts'],0)
+    def test_chinese_free_cash_flow_ratio_name_does_not_bind_to_cfo(self):
+        d=issuer(); d['peers']['median']['fcfd']=1.; d['peers']['median']['cfod']=0.
+        for text in ('自由現金流對債務比率低於行業中位數。',
+                     '自由现金流对债务比率低于行业中位数。'):
+            with self.subTest(text=text):
+                r=check_sections({'test':[{'text':text}]},deterministic_facts(d))
+                self.assertEqual(r['checks'][0]['fact_id'],'fcf_to_debt.peer')
+                self.assertEqual(r['conflicts'],0)
+    def test_mixed_direction_targets_remain_unreviewed(self):
+        for text in ('Interest coverage is above one though below the sector median.',
+                     'The current ratio is below the sector median because liabilities exceed current assets.'):
+            with self.subTest(text=text):
+                r=check_sections({'test':[{'text':text}]},deterministic_facts(issuer()))
+                self.assertEqual(r['checked'],0)
+                self.assertEqual(r['conflicts'],0)
+                self.assertGreater(r['unreviewed'],0)
     def test_ambiguous_funding_bases_are_unreviewed(self):
         r=check_sections({'test':[{'text':'Operating cash flow and free cash flow cover dividends.'}]},deterministic_facts(issuer()))
         self.assertEqual(r['checked'],0)
