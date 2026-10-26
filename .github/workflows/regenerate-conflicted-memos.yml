@@ -1,0 +1,71 @@
+name: Regenerate conflicted memos
+
+# Finds stored memos whose comparisons contradict the deterministic figures
+# (engine/pipeline/memo_repair.py), regenerates only those with the current
+# guarded generator, merges memo + passages back (figures untouched) and opens
+# a pull request. Needs repository secrets SEC_USER_AGENT and DEEPSEEK_API_KEY.
+on:
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: "Comma-separated tickers; empty = every memo with a conflict"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r engine/requirements.txt pandas
+      - name: Audit before
+        working-directory: engine
+        run: python -m pipeline.memo_repair audit
+      - name: Choose issuers
+        id: pick
+        working-directory: engine
+        run: |
+          T="${{ github.event.inputs.tickers }}"
+          if [ -z "$T" ]; then T="$(python -m pipeline.memo_repair list)"; fi
+          echo "tickers=$T" >> "$GITHUB_OUTPUT"
+          echo "Regenerating: $T"
+      - name: Regenerate memos
+        if: steps.pick.outputs.tickers != ''
+        working-directory: engine
+        run: python -m pipeline.ai --force --only "${{ steps.pick.outputs.tickers }}" --workers 4
+      - name: Merge memos into issuer files
+        if: steps.pick.outputs.tickers != ''
+        working-directory: engine
+        run: python -m pipeline.memo_repair merge "${{ steps.pick.outputs.tickers }}"
+      - name: Audit after
+        working-directory: engine
+        run: python -m pipeline.memo_repair audit
+      - run: python -m unittest discover -s tests
+        working-directory: engine
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "tickmark-bot"
+          git config user.email "tickmark-bot@users.noreply.github.com"
+          BR="fix/regenerated-memos-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add public/data
+          git diff --cached --quiet && { echo "nothing changed"; exit 0; }
+          git commit -m "data: regenerate memos that contradicted deterministic figures"
+          git push origin "$BR"
+          gh pr create --base main --head "$BR" \
+            --title "Regenerate memos that contradicted deterministic figures" \
+            --body "Regenerated with the guarded generator; only memo and passages changed. See the Audit before/after steps in run ${{ github.run_id }}." \
+            || echo "Branch pushed; open the PR manually (enable 'Allow GitHub Actions to create pull requests' to automate)."
